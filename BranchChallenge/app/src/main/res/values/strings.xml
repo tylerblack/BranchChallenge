@@ -5,4 +5,5 @@
     <string name="kenyan_code">KES</string>
     <string name="tanzanian_code">TZS</string>
     <string name="ugandan_code">UGX</string>
+    <string name="error">\"Loading\"</string>
 </resources>

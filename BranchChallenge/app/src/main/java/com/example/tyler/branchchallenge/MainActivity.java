@@ -71,15 +71,7 @@ public class MainActivity extends AppCompatActivity {
         mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
-                if(mRecentResponses[tab.getPosition()]!= null) {
-                    if(mRecentResponses[tab.getPosition()] != null) {
-                        mCurrencyAmount.setText(String.valueOf(mRecentResponses[tab.getPosition()].ask));
-                        mCurrencyName.setText(mCurrencyCodes[tab.getPosition()]);
-                        mTimestamp.setText(mRecentResponses[tab.getPosition()].timestamp);
-                    }
-                }
-
+               updateInformation();
             }
 
             @Override
@@ -99,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // Instantiate the RequestQueue.
         final RequestQueue queue = Volley.newRequestQueue(this);
+        updateInformation();
 
         TimerTask requestTimer = new TimerTask() {
             @Override
@@ -117,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
                                     Gson gson = new Gson();
                                     BitcoinJson newResponse = gson.fromJson(response, BitcoinJson.class);
                                     mRecentResponses[finalI] = newResponse;
+                                    updateInformation();
                                 }
                             }, new Response.ErrorListener() {
                         @Override
@@ -142,6 +136,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause(){
         super.onPause();
         mTimer.cancel();
+    }
+
+    public void updateInformation(){
+        int position =  mTabLayout.getSelectedTabPosition();
+        if(mRecentResponses[position] != null) {
+            mCurrencyAmount.setText(String.valueOf(mRecentResponses[position].ask));
+            mCurrencyName.setText(mCurrencyCodes[position]);
+            mTimestamp.setText(mRecentResponses[position].timestamp);
+        }
+        else{
+            mCurrencyName.setText(getResources().getString(R.string.error));
+            mCurrencyAmount.setText(getResources().getString(R.string.error));
+            mTimestamp.setText(getResources().getString(R.string.error));
+        }
     }
 
     @Override

@@ -2,12 +2,10 @@ package com.example.tyler.branchchallenge;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -37,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     TextView mCurrencyName;
     TextView mCurrencyAmount;
     TextView mTimestamp;
+    TabLayout mTabLayout;
 
     private Timer mTimer;
 
@@ -47,8 +46,9 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mCurrencyName = (TextView) findViewById(R.id.currency_name);
+        mTabLayout = (TabLayout) findViewById(R.id.tabs);
         mCurrencyAmount = (TextView) findViewById(R.id.currency_amount);
+        mCurrencyName = (TextView) findViewById(R.id.currency_name);
         mTimestamp = (TextView) findViewById(R.id.currency_timestamp);
 
     }
@@ -59,10 +59,40 @@ public class MainActivity extends AppCompatActivity {
         mTimer = new Timer();
         mRecentResponses = new BitcoinJson[NUM_CURRENCIES];
         mCurrencyCodes = new String[NUM_CURRENCIES];
+
         mCurrencyCodes[0] = getResources().getString(R.string.us_code);
+        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.us_code));
         mCurrencyCodes[1] = getResources().getString(R.string.kenyan_code);
+        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.kenyan_code));
         mCurrencyCodes[2] = getResources().getString(R.string.tanzanian_code);
+        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.tanzanian_code));
         mCurrencyCodes[3] = getResources().getString(R.string.ugandan_code);
+        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.ugandan_code));
+        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+
+                if(mRecentResponses[tab.getPosition()]!= null) {
+                    if(mRecentResponses[tab.getPosition()] != null) {
+                        mCurrencyAmount.setText(String.valueOf(mRecentResponses[tab.getPosition()].ask));
+                        mCurrencyName.setText(mCurrencyCodes[tab.getPosition()]);
+                        mTimestamp.setText(mRecentResponses[tab.getPosition()].timestamp);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
     }
     @Override
     protected void onResume() {
@@ -87,11 +117,6 @@ public class MainActivity extends AppCompatActivity {
                                     Gson gson = new Gson();
                                     BitcoinJson newResponse = gson.fromJson(response, BitcoinJson.class);
                                     mRecentResponses[finalI] = newResponse;
-
-                                    mCurrencyAmount.setText(String.valueOf(mRecentResponses[0].ask));
-                                    mTimestamp.setText( String.valueOf(mRecentResponses[0].timestamp));
-                                    mCurrencyName.setText(mCurrencyCodes[0]);
-
                                 }
                             }, new Response.ErrorListener() {
                         @Override

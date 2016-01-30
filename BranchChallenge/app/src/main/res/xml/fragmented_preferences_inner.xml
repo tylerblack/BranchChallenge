@@ -1,0 +1,33 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Country Code">
+
+        <EditTextPreference
+            android:key="code_1"
+            android:title="Change Country 1"
+            android:summary="Enter the three character country code"
+            android:dialogTitle="edit dialog" />
+
+        <EditTextPreference
+            android:key="code_2"
+            android:title="Change Country 2"
+            android:summary="Enter the three character country code"
+            android:dialogTitle="edit dialog" />
+
+        <EditTextPreference
+            android:key="code_3"
+            android:title="Change Country 3"
+            android:summary="Enter the three character country code"
+            android:dialogTitle="edit dialog" />
+
+        <EditTextPreference
+            android:key="code_4"
+            android:title="Change Country 4"
+            android:summary="Enter the three character country code"
+            android:dialogTitle="edit dialog" />
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

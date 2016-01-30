@@ -1,7 +1,10 @@
 package com.example.tyler.branchchallenge;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         mTabLayout = (TabLayout) findViewById(R.id.tabs);
         mCurrencyAmount = (TextView) findViewById(R.id.currency_amount);
         mCurrencyName = (TextView) findViewById(R.id.currency_name);
@@ -60,14 +64,19 @@ public class MainActivity extends AppCompatActivity {
         mRecentResponses = new BitcoinJson[NUM_CURRENCIES];
         mCurrencyCodes = new String[NUM_CURRENCIES];
 
-        mCurrencyCodes[0] = getResources().getString(R.string.us_code);
-        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.us_code));
-        mCurrencyCodes[1] = getResources().getString(R.string.kenyan_code);
-        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.kenyan_code));
-        mCurrencyCodes[2] = getResources().getString(R.string.tanzanian_code);
-        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.tanzanian_code));
-        mCurrencyCodes[3] = getResources().getString(R.string.ugandan_code);
-        mTabLayout.addTab(mTabLayout.newTab().setText(R.string.ugandan_code));
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String c0 = prefs.getString("code_1", getResources().getString(R.string.us_code));
+        String c1 = prefs.getString("code_2", getResources().getString(R.string.kenyan_code));
+        String c2 = prefs.getString("code_3", getResources().getString(R.string.tanzanian_code));
+        String c3 = prefs.getString("code_4", getResources().getString(R.string.ugandan_code));
+        mCurrencyCodes[0] = c0.toUpperCase();
+        mTabLayout.addTab(mTabLayout.newTab().setText(c0));
+        mCurrencyCodes[1] = c1.toUpperCase();
+        mTabLayout.addTab(mTabLayout.newTab().setText(c1));
+        mCurrencyCodes[2] = c2.toUpperCase();
+        mTabLayout.addTab(mTabLayout.newTab().setText(c2));
+        mCurrencyCodes[3] = c3.toUpperCase();
+        mTabLayout.addTab(mTabLayout.newTab().setText(c3));
         mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -116,8 +125,13 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onErrorResponse(VolleyError error) {
 
-                            //TODO: display error based on response
-                            Log.d(TAG, "code is not valid");
+                            if(error.networkResponse.statusCode == 404){
+                                BitcoinJson newResponse = new BitcoinJson();
+                                newResponse.ask = 0;
+                                newResponse.timestamp = "Country not found";
+                                mRecentResponses[finalI] = newResponse;
+                                updateInformation();
+                            }
                         }
 
                     });
@@ -136,11 +150,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause(){
         super.onPause();
         mTimer.cancel();
+        mTabLayout.removeAllTabs();
     }
 
     public void updateInformation(){
         int position =  mTabLayout.getSelectedTabPosition();
-        if(mRecentResponses[position] != null) {
+        if( position >= 0 && position < mRecentResponses.length && mRecentResponses[position] != null) {
             mCurrencyAmount.setText(String.valueOf(mRecentResponses[position].ask));
             mCurrencyName.setText(mCurrencyCodes[position]);
             mTimestamp.setText(mRecentResponses[position].timestamp);
@@ -168,6 +183,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, PreferenceWithHeaders.class);
+            startActivity(intent);
             return true;
         }
 

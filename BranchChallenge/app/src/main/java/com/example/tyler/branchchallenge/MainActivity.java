@@ -18,11 +18,20 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends AppCompatActivity {
     final String TAG = "BranchChallenge";
+    final String BASE_URL = "https://api.bitcoinaverage.com/ticker/global/";
     final int NUM_CURRENCIES = 4;
 
+    //Timer duration increased to 20 from 10 specified to reduce 429 errors
+    final int REFRESH_DELAY = 20;
+
     private String[] currencyCodes;
+
+    private Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart(){
         super.onStart();
+        mTimer = new Timer();
         currencyCodes = new String[NUM_CURRENCIES];
         currencyCodes[0] = getResources().getString(R.string.us_code);
         currencyCodes[1] = getResources().getString(R.string.kenyan_code);
@@ -54,31 +64,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String baseUrl = "https://api.bitcoinaverage.com/ticker/global/";
+        final RequestQueue queue = Volley.newRequestQueue(this);
 
-        for (String code : currencyCodes) {
-            // Request a string response from the provided URL.
-            Uri.Builder builder = new Uri.Builder();
-            Uri url = builder.path(baseUrl).appendPath(code).build();
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url.getPath(),
-                    new Response.Listener<String>() {
+        TimerTask requestTimer = new TimerTask() {
+            @Override
+            public void run() {
+                for (String code : currencyCodes) {
+                    // Request a string response from the provided URL.
+                    Uri.Builder builder = new Uri.Builder();
+                    Uri url = builder.path(BASE_URL).appendPath(code).build();
+                    StringRequest stringRequest = new StringRequest(Request.Method.GET, url.getPath(),
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    Log.d(TAG, response);
+                                }
+                            }, new Response.ErrorListener() {
                         @Override
-                        public void onResponse(String response) {
-                            Log.d(TAG, response);
+                        public void onErrorResponse(VolleyError error) {
+
+                            //TODO: display error based on response
+                            Log.d(TAG, "code is not valid");
                         }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
 
-                    //TODO: display error based on response
-                    Log.d(TAG, "code is not valid");
+                    });
+                    // Add the request to the RequestQueue.
+                    queue.add(stringRequest);
                 }
+            }
+        };
 
-            });
-            // Add the request to the RequestQueue.
-            queue.add(stringRequest);
-        }
+        mTimer.schedule(requestTimer, 0,  REFRESH_DELAY*1000);
+
+    }
+
+    @Override
+    protected void onPause(){
+        super.onPause();
+        mTimer.cancel();
     }
 
     @Override

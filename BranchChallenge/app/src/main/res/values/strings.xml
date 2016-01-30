@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BranchChallenge</string>
+    <string name="action_settings">Settings</string>
+    <string name="us_code">USD</string>
+    <string name="kenyan_code">KES</string>
+    <string name="tanzanian_code">TZS</string>
+    <string name="ugandan_code">UGX</string>
+</resources>

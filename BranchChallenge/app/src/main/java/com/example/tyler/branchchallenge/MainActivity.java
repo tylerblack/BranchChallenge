@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -17,6 +18,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -29,7 +31,12 @@ public class MainActivity extends AppCompatActivity {
     //Timer duration increased to 20 from 10 specified to reduce 429 errors
     final int REFRESH_DELAY = 20;
 
-    private String[] currencyCodes;
+    private String[] mCurrencyCodes;
+    private BitcoinJson[] mRecentResponses;
+
+    TextView mCurrencyName;
+    TextView mCurrencyAmount;
+    TextView mTimestamp;
 
     private Timer mTimer;
 
@@ -40,25 +47,22 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        mCurrencyName = (TextView) findViewById(R.id.currency_name);
+        mCurrencyAmount = (TextView) findViewById(R.id.currency_amount);
+        mTimestamp = (TextView) findViewById(R.id.currency_timestamp);
+
     }
 
     @Override
     protected void onStart(){
         super.onStart();
         mTimer = new Timer();
-        currencyCodes = new String[NUM_CURRENCIES];
-        currencyCodes[0] = getResources().getString(R.string.us_code);
-        currencyCodes[1] = getResources().getString(R.string.kenyan_code);
-        currencyCodes[2] = getResources().getString(R.string.tanzanian_code);
-        currencyCodes[3] = getResources().getString(R.string.ugandan_code);
+        mRecentResponses = new BitcoinJson[NUM_CURRENCIES];
+        mCurrencyCodes = new String[NUM_CURRENCIES];
+        mCurrencyCodes[0] = getResources().getString(R.string.us_code);
+        mCurrencyCodes[1] = getResources().getString(R.string.kenyan_code);
+        mCurrencyCodes[2] = getResources().getString(R.string.tanzanian_code);
+        mCurrencyCodes[3] = getResources().getString(R.string.ugandan_code);
     }
     @Override
     protected void onResume() {
@@ -69,15 +73,25 @@ public class MainActivity extends AppCompatActivity {
         TimerTask requestTimer = new TimerTask() {
             @Override
             public void run() {
-                for (String code : currencyCodes) {
+                for(int i = 0; i < mCurrencyCodes.length; i++){
+                    String code = mCurrencyCodes[i];
                     // Request a string response from the provided URL.
                     Uri.Builder builder = new Uri.Builder();
                     Uri url = builder.path(BASE_URL).appendPath(code).build();
+                    final int finalI = i;
                     StringRequest stringRequest = new StringRequest(Request.Method.GET, url.getPath(),
                             new Response.Listener<String>() {
                                 @Override
                                 public void onResponse(String response) {
-                                    Log.d(TAG, response);
+
+                                    Gson gson = new Gson();
+                                    BitcoinJson newResponse = gson.fromJson(response, BitcoinJson.class);
+                                    mRecentResponses[finalI] = newResponse;
+
+                                    mCurrencyAmount.setText(String.valueOf(mRecentResponses[0].ask));
+                                    mTimestamp.setText( String.valueOf(mRecentResponses[0].timestamp));
+                                    mCurrencyName.setText(mCurrencyCodes[0]);
+
                                 }
                             }, new Response.ErrorListener() {
                         @Override
@@ -94,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        mTimer.schedule(requestTimer, 0,  REFRESH_DELAY*1000);
+        mTimer.schedule(requestTimer, 0, REFRESH_DELAY * 1000);
+
 
     }
 
